@@ -1,45 +1,42 @@
 name: Build Meowbit Firmware
 
+# Run manually or on push to main
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build Meowbit Firmware
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: true  # Ensures your submodule is checked out
+          submodules: recursive  # make sure submodules are pulled
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git curl
+          sudo apt-get install -y build-essential gcc-arm-none-eabi make git
 
-      - name: Install ARM GCC toolchain
+      - name: Build libopencm3 single-threaded
         run: |
-          sudo apt-get install -y gcc-arm-none-eabi
-
-      - name: Build libopencm3
-        run: |
-          echo "Building libopencm3..."
+          echo "Building libopencm3 single-threaded..."
           cd libopencm3
-          make
+          make -j1
           cd ..
 
       - name: Build Meowbit firmware
         run: |
-          echo "Building Meowbit firmware..."
+          echo "Building firmware..."
           make
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
           name: meowbit-firmware
-          path: build/*.hex  # adjust to your actual build output location
+          path: build/*.bin   # adjust if your firmware output is elsewhere
