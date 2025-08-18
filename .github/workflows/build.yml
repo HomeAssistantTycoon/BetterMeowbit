@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        submodules: recursive   # make sure libopencm3 is pulled
 
     - name: Install ARM GCC Toolchain
       run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi make python3
@@ -24,7 +26,8 @@ jobs:
     - name: Build libopencm3
       run: |
         echo "Building libopencm3 single-threaded..."
-        make -j1 -C lib
+        cd libopencm3
+        make -j1
 
     - name: Build BetterMeowbit firmware
       run: |
