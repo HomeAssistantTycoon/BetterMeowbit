@@ -1,6 +1,6 @@
 [submodule "libopencm3"]
 	path = libopencm3
-	url = https://github.com/HomeAssistantTycoon/libopencm3-fixed.git
+	url = https://github.com/HomeAssistantTycoon/libopencm3-fixed
 [submodule "uf2"]
 	path = uf2
 	url = https://github.com/Microsoft/uf2
