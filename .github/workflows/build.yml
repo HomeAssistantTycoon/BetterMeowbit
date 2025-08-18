@@ -1,6 +1,5 @@
 name: Build Meowbit Firmware
 
-# Run manually or on push to main
 on:
   push:
     branches:
@@ -11,6 +10,9 @@ jobs:
   build:
     name: Build Meowbit Firmware
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash  # force Bash instead of sh
 
     steps:
       - name: Checkout repository
@@ -25,14 +27,14 @@ jobs:
 
       - name: Build libopencm3 single-threaded
         run: |
-          echo "Building libopencm3 single-threaded..."
+          echo 'Building libopencm3 single-threaded...'
           cd libopencm3
           make -j1
           cd ..
 
       - name: Build Meowbit firmware
         run: |
-          echo "Building firmware..."
+          echo 'Building firmware...'
           make
 
       - name: Upload firmware artifact
