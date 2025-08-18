@@ -5,48 +5,37 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:   # 👈 lets you run manually from Actions tab
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            gcc-arm-none-eabi \
-            binutils-arm-none-eabi \
-            make \
-            python3
+    - name: Install ARM GCC Toolchain
+      run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi make python3
 
-      - name: Verify environment
-        run: |
-          arm-none-eabi-gcc --version
-          make --version
-          bash --version
+    - name: Verify toolchain
+      run: arm-none-eabi-gcc --version
 
-      - name: Build libopencm3 single-threaded (bash + verbose)
-        working-directory: libopencm3
-        env:
-          SHELL: /bin/bash
-        run: |
-          echo "Building libopencm3 single-threaded..."
-          make -j1 V=1
+    - name: Build libopencm3
+      run: |
+        echo "Building libopencm3 single-threaded..."
+        make -j1 -C lib
 
-      - name: Build BetterMeowbit firmware
-        working-directory: firmware
-        run: |
-          echo "Building BetterMeowbit firmware..."
-          make -j$(nproc)
+    - name: Build BetterMeowbit firmware
+      run: |
+        echo "Building BetterMeowbit firmware..."
+        make -j1
 
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bettermeowbit-firmware
-          path: firmware/*.bin
+    - name: Upload firmware artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: bettermeowbit-firmware
+        path: |
+          *.bin
+          *.elf
+          *.hex
