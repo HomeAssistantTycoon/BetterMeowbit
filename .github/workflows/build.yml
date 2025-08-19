@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:   # 👈 lets you run manually from Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive   # make sure libopencm3 is pulled
+        submodules: recursive
 
     - name: Install ARM GCC Toolchain
       run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi make python3
@@ -23,11 +23,11 @@ jobs:
     - name: Verify toolchain
       run: arm-none-eabi-gcc --version
 
-    - name: Build libopencm3 (F4 only)
+    - name: Build libopencm3 (single-threaded, stm32/f4 only)
       run: |
-        echo "Building libopencm3 (stm32f4 only)..."
+        echo "Building libopencm3 (stm32/f4, single-threaded)..."
         cd libopencm3
-        make -j1 TARGETS="lib/stm32/f4"
+        make -j1 TARGETS="stm32/f4"
 
     - name: Build BetterMeowbit firmware
       run: |
