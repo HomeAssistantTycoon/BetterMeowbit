@@ -23,16 +23,15 @@ jobs:
     - name: Verify toolchain
       run: arm-none-eabi-gcc --version
 
-    - name: Build libopencm3 (single-threaded, stm32/f4 only)
+    - name: Build libopencm3 + BetterMeowbit firmware
       run: |
-        echo "Building libopencm3 (stm32/f4, single-threaded)..."
+        echo "Building libopencm3 (stm32/f4) and BetterMeowbit firmware..."
         cd libopencm3
-        make -j1 TARGETS="stm32/f4"
-
-    - name: Build BetterMeowbit firmware
-      run: |
-        echo "Building BetterMeowbit firmware..."
-        make -j1
+        # build only F4 lib, single-threaded
+        make TARGETS="stm32/f4" -j1
+        cd ..
+        # build firmware using fixed Makefile
+        make -j1 build-bl
 
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
