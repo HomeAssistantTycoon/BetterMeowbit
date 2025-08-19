@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch:   # allows manual runs
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive
+        submodules: recursive   # ensures libopencm3 is pulled
 
     - name: Install ARM GCC Toolchain
       run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi make python3
@@ -25,7 +25,7 @@ jobs:
 
     - name: Patch libopencm3 Makefile
       run: |
-        # Fix unterminated quoted string issue in libopencm3 Makefile
+        # Remove backslash escape that causes "unterminated quoted string"
         sed -i 's/\\\$(space)/$(space)/' libopencm3/Makefile
         sed -i 's/SRCLIBDIR := .*/SRCLIBDIR := $(realpath lib)/' libopencm3/Makefile
 
@@ -33,15 +33,13 @@ jobs:
       run: make -C libopencm3 lib
 
     - name: Build BetterMeowbit firmware
-      run: |
-        echo "Building BetterMeowbit firmware..."
-        make -j1
+      run: make -j1
 
     - name: Upload firmware artifact
       uses: actions/upload-artifact@v4
       with:
         name: bettermeowbit-firmware
         path: |
-          *.bin
-          *.elf
-          *.hex
+          build/**/*.bin
+          build/**/*.elf
+          build/**/*.hex
