@@ -17,21 +17,17 @@ jobs:
       with:
         submodules: recursive   # make sure libopencm3 is pulled
 
-    - name: Install ARM GCC Toolchain + deps
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential gcc-arm-none-eabi make git python3
-        # Fix: libopencm3 scripts expect "python", not "python3"
-        sudo ln -sf /usr/bin/python3 /usr/bin/python
+    - name: Install ARM GCC Toolchain
+      run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi make python3
 
     - name: Verify toolchain
       run: arm-none-eabi-gcc --version
 
-    - name: Build libopencm3
+    - name: Build libopencm3 (F4 only)
       run: |
-        echo "Building libopencm3 single-threaded..."
+        echo "Building libopencm3 (stm32f4 only)..."
         cd libopencm3
-        make -j1
+        make -j1 TARGETS="lib/stm32/f4"
 
     - name: Build BetterMeowbit firmware
       run: |
