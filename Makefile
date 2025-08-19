@@ -143,7 +143,7 @@ deploy:
 
 $(OCM3FILE): 
 	${MAKE} checksubmodules
-	${MAKE} -C $(LIBOPENCM3) -j10 lib
+	${MAKE} -C $(LIBOPENCM3) -j1 TARGETS="lib/stm32/f4"
 
 .PHONY: checksubmodules
 checksubmodules: updatesubmodules
