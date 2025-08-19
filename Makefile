@@ -1,77 +1,58 @@
-#
-# Common Makefile for the PX4 bootloaders / BetterMeowbit
-#
+##
+## Main BetterMeowbit Makefile
+##
 
 -include Makefile.user
 
-#
-# Paths to common dependencies
-#
-export BL_BASE       ?= $(wildcard .)
-export LIBOPENCM3    ?= $(wildcard libopencm3)
+BL_BASE   ?= $(wildcard .)
+LIBOPENCM3 ?= $(wildcard libopencm3)
 
-#
-# Tools
-#
-export CC       = arm-none-eabi-gcc
-export OBJCOPY  = arm-none-eabi-objcopy
-export OPENOCD  ?= openocd
-
+CC        = arm-none-eabi-gcc
+OBJCOPY   = arm-none-eabi-objcopy
+OPENOCD   ?= openocd
 JTAGCONFIG ?= interface/stlink-v2.cfg
 
 export BOARD ?= f401
 -include boards/$(BOARD)/board.mk
 
-# Default to F401; override in board.mk if needed
 FN ?= f4
 CPUTYPE ?= STM32F401
 CPUTYPE_SHORT ?= STM32F4
 CPUFLAGS ?= -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
-LINKER_FILE ?= linker/stm32$(FN).ld 
+LINKER_FILE ?= linker/stm32$(FN).ld
 ifeq ($(origin EXTRAFLAGS), undefined)
 	EXTRAFLAGS ?= -D$(CPUTYPE)
 else
 	EXTRAFLAGS += -D$(CPUTYPE)
 endif
 
-#
-# Common configuration
-#
-export FLAGS      = -std=gnu99 \
-                     -Os \
-                     -g \
-                     -Wundef \
-                     -Wall \
-                     -fno-builtin \
-                     -I$(LIBOPENCM3)/include \
-                     -Iboards/$(BOARD) \
-                     -ffunction-sections \
-                     -nostartfiles \
-                     -lnosys \
-                     -Wl,-gc-sections \
-                     -Wl,-g \
-                     -Wno-unused \
-                     -Werror
+export FLAGS = -std=gnu99 \
+	-Os -g -Wundef -Wall -fno-builtin \
+	-I$(LIBOPENCM3)/include \
+	-Iboards/$(BOARD) \
+	-ffunction-sections \
+	-nostartfiles \
+	-lnosys \
+	-Wl,-gc-sections \
+	-Wl,-g \
+	-Wno-unused \
+	-Werror \
+	-mthumb $(CPUFLAGS) \
+	-D$(CPUTYPE_SHORT) \
+	-T$(LINKER_FILE) \
+	-L$(LIBOPENCM3)/lib \
+	-lopencm3_stm32$(FN) \
+	$(EXTRAFLAGS)
 
-export COMMON_SRCS = bl.c usb.c usb_msc.c ghostfat.c dmesg.c screen.c images.c settings.c hf2.c support.c webusb.c winusb.c util.c flashwarning.c
+COMMON_SRCS = bl.c usb.c usb_msc.c ghostfat.c dmesg.c screen.c images.c \
+              settings.c hf2.c support.c webusb.c winusb.c util.c flashwarning.c
 
-SRCS  = $(COMMON_SRCS) main_$(FN).c
-OBJS  := $(patsubst %.c,%.o,$(SRCS))
-DEPS  := $(OBJS:.o=.d)
-
-FLAGS += -mthumb $(CPUFLAGS) \
-         -D$(CPUTYPE_SHORT) \
-         -T$(LINKER_FILE) \
-         -L$(LIBOPENCM3)/lib \
-         -lopencm3_stm32$(FN) \
-         $(EXTRAFLAGS)
+SRCS = $(COMMON_SRCS) main_$(FN).c
+OBJS := $(patsubst %.c,%.o,$(SRCS))
+DEPS := $(OBJS:.o=.d)
 
 OPENOCDALL = $(OPENOCD) -f $(JTAGCONFIG) -f target/stm32$(FN)x.cfg
-
-#
-# Bootloaders to build
-#
 
 all: build-bl sizes
 
@@ -80,17 +61,13 @@ clean:
 	rm -f *.elf *.bin
 	rm -rf build
 
-# any file generated during libopencm3 build
-OCM3FILE = $(LIBOPENCM3)/include/libopencm3/stm32/f4/nvic.h
+OCM3FILE = $(LIBOPENCM3)/include/libopencm3/stm32/$(FN)/nvic.h
 
 build-bl: $(MAKEFILE_LIST) $(OCM3FILE) do-build
 
-#
-# Build libopencm3 F4 target properly
-#
-$(OCM3FILE): 
+$(OCM3FILE):
 	$(MAKE) checksubmodules
-	$(MAKE) -C $(LIBOPENCM3) lib/stm32/f4
+	@bash -lc '$(MAKE) -C $(LIBOPENCM3) lib'
 
 .PHONY: checksubmodules
 checksubmodules: updatesubmodules
@@ -100,11 +77,6 @@ checksubmodules: updatesubmodules
 updatesubmodules:
 	$(Q) (git submodule init)
 	$(Q) (git submodule update)
-
-#
-# General rules for making dependency and object files
-#
-include rules.mk
 
 flash: upload
 burn: upload
@@ -126,21 +98,7 @@ flash-bootloader:
 gdb:
 	$(GDB) $(BMP_ARGS) build/$(BOARD)/bootloader.elf
 
-#
-# Show sizes
-#
 .PHONY: sizes
 sizes:
 	@-find build/*/ -name '*.elf' -type f | xargs size 2> /dev/null || :
-
-drop:
-	for f in `cd boards; ls` ; do $(MAKE) BOARD=$$f ; done
-	cd build; 7z a uf2-stm32f.zip */bootloader.elf */bootloader.bin */flasher.uf2
-
-#
-# Binary management
-#
-.PHONY: deploy
-deploy:
-	zip -j Bootloader.zip build/*/*.bin
 
