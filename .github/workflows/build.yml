@@ -2,9 +2,9 @@ name: Build BetterMeowbit
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch:
 
 jobs:
@@ -40,4 +40,3 @@ jobs:
           build/f401/*.uf2
           build/f401/bootloader.bin
           build/f401/bootloader.elf
-
