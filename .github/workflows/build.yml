@@ -29,15 +29,15 @@ jobs:
         sed -i 's/\\\$(space)/$(space)/' libopencm3/Makefile
         sed -i 's/SRCLIBDIR := .*/SRCLIBDIR := $(realpath lib)/' libopencm3/Makefile
 
-    - name: Build libopencm3
-      run: make -C libopencm3 lib
-
-    - name: Build BetterMeowbit firmware
+    - name: Build everything (firmware + bootloader)
       run: make -j1
 
-    - name: Upload UF2 firmware artifact
+    - name: Upload all build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: bettermeowbit-firmware
-        path: build/f401/*.uf2
+        name: bettermeowbit-build
+        path: |
+          build/f401/*.uf2
+          build/f401/bootloader.bin
+          build/f401/bootloader.elf
 
